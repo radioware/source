@@ -1,0 +1,34 @@
+[Unit]
+Description=Radioware audio source
+Documentation=https://github.com/radioware/source
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/radioware-source --config /etc/radioware/source.toml
+Restart=on-failure
+RestartSec=5
+
+# Log verbosity (error, warn, info, debug, trace).
+Environment=LOG_LEVEL=info
+
+# Run under a transient unprivileged user; no system account needs creating.
+DynamicUser=yes
+
+# Sandboxing: the service only reads its config and talks UDP.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+
+[Install]
+WantedBy=multi-user.target

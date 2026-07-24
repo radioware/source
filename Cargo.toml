@@ -1,0 +1,52 @@
+[package]
+name = "radioware-source"
+description = "Radioware audio source"
+version = "1.0.0"
+edition = "2024"
+authors = [
+    "Luca Cireddu <sardylan@gmail.com>",
+    "Stefano Lande <landeste@gmail.com>"
+]
+readme = "README.md"
+license-file = "LICENSE.md"
+repository = "https://github.com/radioware/source"
+categories = ["network-programming", "multimedia::audio"]
+links = "opus"
+
+[package.metadata.deb]
+maintainer = "Luca Cireddu <sardylan@gmail.com>"
+extended-description = """
+Radioware audio source. Reads f32le PCM audio from a UDP socket, encodes it \
+with Opus, and streams the result to an output UDP socket."""
+section = "sound"
+priority = "optional"
+depends = "$auto"
+changelog = "packaging/changelog"
+assets = [
+    ["target/release/radioware-source", "usr/bin/", "755"],
+    ["packaging/source.toml", "etc/radioware/source.toml", "644"],
+    ["packaging/copyright", "usr/share/doc/radioware-source/copyright", "644"],
+    ["packaging/radioware-source.1", "usr/share/man/man1/radioware-source.1", "644"],
+]
+conf-files = ["/etc/radioware/source.toml"]
+maintainer-scripts = "packaging"
+
+[package.metadata.deb.systemd-units]
+unit-name = "radioware-source"
+unit-scripts = "packaging"
+enable = true
+start = true
+restart-after-upgrade = true
+
+[build-dependencies]
+pkg-config = "0.3.33"
+
+[dependencies]
+clap = { version = "4.6.4", features = ["cargo", "color", "derive", "env", "help", "string", "suggestions", "unicode", "usage", "wrap_help"] }
+figment = { version = "0.10.19", features = ["toml", "env"] }
+mio = { version = "1.2.2", features = ["net", "os-poll"] }
+serde = { version = "1.0.229", features = ["derive"] }
+signal-hook = "0.4.4"
+tracing = "0.1.44"
+tracing-log = "0.2.0"
+tracing-subscriber = { version = "0.3.23", features = ["serde", "alloc", "ansi", "chrono", "env-filter"] }

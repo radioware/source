@@ -1,0 +1,134 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  # Allow manual runs to test the build matrix without publishing a release.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.name }})
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # --- Intel/AMD 64-bit: one package per distro (native x86 runner) ---
+          - name: debian-12-amd64
+            image: "debian:12"
+            platform: linux/amd64
+            label: debian12
+            runs-on: ubuntu-latest
+            qemu: false
+          - name: debian-13-amd64
+            image: "debian:13"
+            platform: linux/amd64
+            label: debian13
+            runs-on: ubuntu-latest
+            qemu: false
+          - name: ubuntu-24.04-amd64
+            image: "ubuntu:24.04"
+            platform: linux/amd64
+            label: ubuntu2404
+            runs-on: ubuntu-latest
+            qemu: false
+          - name: ubuntu-26.04-amd64
+            image: "ubuntu:26.04"
+            platform: linux/amd64
+            label: ubuntu2604
+            runs-on: ubuntu-latest
+            qemu: false
+
+          # --- ARM 32-bit (armv7/armhf): emulated; no native 32-bit runner ---
+          - name: debian-12-armhf
+            image: "debian:12"
+            platform: linux/arm/v7
+            label: debian12
+            runs-on: ubuntu-latest
+            qemu: true
+          - name: debian-13-armhf
+            image: "debian:13"
+            platform: linux/arm/v7
+            label: debian13
+            runs-on: ubuntu-latest
+            qemu: true
+
+          # --- ARM 64-bit (aarch64/arm64): native arm64 runner, no emulation ---
+          - name: debian-12-arm64
+            image: "debian:12"
+            platform: linux/arm64
+            label: debian12
+            runs-on: ubuntu-24.04-arm
+            qemu: false
+          - name: debian-13-arm64
+            image: "debian:13"
+            platform: linux/arm64
+            label: debian13
+            runs-on: ubuntu-24.04-arm
+            qemu: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Only needed for the emulated (armhf) jobs; native jobs skip it.
+      - name: Set up QEMU
+        if: ${{ matrix.qemu }}
+        uses: docker/setup-qemu-action@v3
+
+      # Cache the Rust toolchain, cargo registry, compiled cargo-deb and build
+      # output so repeat builds skip the expensive cargo-deb compile.
+      - name: Cache build environment
+        uses: actions/cache@v4
+        with:
+          path: |
+            .ci-cache
+            target
+          key: ${{ matrix.name }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ matrix.name }}-
+
+      - name: Build .deb in ${{ matrix.image }} (${{ matrix.platform }})
+        run: |
+          docker run --rm \
+            --platform "${{ matrix.platform }}" \
+            -v "${{ github.workspace }}:/src" \
+            -w /src \
+            "${{ matrix.image }}" \
+            bash packaging/build-deb.sh "${{ matrix.label }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-${{ matrix.name }}
+          path: dist/*.deb
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    needs: build
+    runs-on: ubuntu-latest
+    # Only publish for tag pushes; manual/dispatch runs just build.
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download all .deb artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: deb-*
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -lh dist
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.deb
+          generate_release_notes: true
+          fail_on_unmatched_files: true

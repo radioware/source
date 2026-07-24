@@ -1,0 +1,64 @@
+.TH RADIOWARE\-SOURCE 1 "July 2026" "radioware\-source 1.0.0" "User Commands"
+.SH NAME
+radioware\-source \- Radioware audio source
+.SH SYNOPSIS
+.B radioware\-source
+[\fIOPTIONS\fR]
+.SH DESCRIPTION
+Reads f32le PCM audio from a UDP socket, encodes it with Opus, and streams the
+result to an output UDP socket.
+.PP
+Settings are resolved by layering, from lowest to highest precedence: built\-in
+defaults, the TOML configuration file, \fBRADIOWARE_*\fR environment variables,
+and finally the command\-line flags described below.
+.SH OPTIONS
+.TP
+.BR \-c ", " \-\-config " " \fIPATH\fR
+Path to the TOML configuration file (default: radioware.toml).
+.TP
+.BR \-\-input\-bind " " \fIHOST:PORT\fR
+Address the input UDP socket binds to.
+.TP
+.BR \-\-input\-samplerate " " \fIHZ\fR
+Sample rate, in Hz, of the incoming f32le PCM.
+.TP
+.BR \-\-channels " " \fIN\fR
+Number of interleaved audio channels in the input stream.
+.TP
+.BR \-\-frame\-duration " " \fIMS\fR
+Codec frame duration, in milliseconds.
+.TP
+.BR \-\-output\-bind " " \fIHOST:PORT\fR
+Address the output UDP socket binds to locally.
+.TP
+.BR \-\-output\-host " " \fIHOST:PORT\fR
+Destination the encoded audio is sent to.
+.TP
+.BR \-\-output\-samplerate " " \fIHZ\fR
+Output sample rate, in Hz.
+.TP
+.BR \-\-output\-bitrate " " \fIBPS\fR
+Target Opus bitrate, in bits per second.
+.TP
+.BR \-h ", " \-\-help
+Print help.
+.TP
+.BR \-V ", " \-\-version
+Print version.
+.SH FILES
+.TP
+.I /etc/radioware/source.toml
+System\-wide configuration file installed by the package.
+.SH ENVIRONMENT
+.TP
+.B LOG_LEVEL
+Log verbosity: one of \fBerror\fR, \fBwarn\fR, \fBinfo\fR, \fBdebug\fR or
+\fBtrace\fR (default: warn).
+.TP
+.B RADIOWARE_*
+Any configuration key can be set through an environment variable of the same
+name with a \fBRADIOWARE_\fR prefix, e.g. \fBRADIOWARE_INPUT_BIND\fR.
+.SH AUTHOR
+Luca Cireddu <sardylan@gmail.com>
+.SH SEE ALSO
+Project homepage: <https://github.com/radioware/source>
