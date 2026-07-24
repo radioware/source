@@ -11,7 +11,7 @@
 input_bind = "[::]:40001"
 
 # Sample rate (Hz) of the incoming f32le PCM.
-input_samplerate = 48000
+input_samplerate = 8000
 
 # Number of audio channels.
 channels = 1
