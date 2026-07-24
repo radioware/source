@@ -40,12 +40,12 @@ pub(crate) struct Configuration {
 impl Default for Configuration {
     fn default() -> Self {
         Self {
-            input_bind: "[::]:8888".to_string(),
+            input_bind: "[::]:40001".to_string(),
             input_samplerate: 48000,
             channels: 1,
             frame_duration: 20,
             output_bind: "[::]:0".to_string(),
-            output_host: "localhost:1235".to_string(),
+            output_host: "localhost:40000".to_string(),
             output_samplerate: 8000,
             output_bitrate: 16000,
         }
